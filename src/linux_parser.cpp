@@ -6,9 +6,29 @@
 #include "linux_parser.h"
 
 using std::stof;
+using std::stol;
 using std::string;
 using std::to_string;
 using std::vector;
+
+
+vector<std::string> LinuxParser::ReadFile(std::string p){
+  vector<std::string> v;
+  string line;
+
+  std::ifstream filestream(p);
+
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)){
+      //std::getline(filestream, line);
+      std::istringstream linestream(line);
+      v.push_back(line);
+    }
+    
+  }
+  return v;
+}
+
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::OperatingSystem() {
@@ -35,13 +55,13 @@ string LinuxParser::OperatingSystem() {
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::Kernel() {
-  string os, kernel;
+  string os, version, kernel;
   string line;
   std::ifstream stream(kProcDirectory + kVersionFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    linestream >> os >> kernel;
+    linestream >> os >> version >> kernel;
   }
   return kernel;
 }
@@ -67,10 +87,49 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+float LinuxParser::MemoryUtilization() { 
+   auto mem = ReadFile(kProcDirectory + kMeminfoFilename);
+  string MemTotal, MemFree, MemAvailable, Buffer, Cache;
+  string name, val;
+
+  vector<string> valueStrings;
+
+  for(int i = 0; i < 5; i++){
+    std::stringstream ss;
+    ss << mem[i];
+    ss >> name >> val;
+    valueStrings.push_back(val);
+  }
+
+  size_t sz;
+  double d_MemTotal = std::stod(valueStrings[0], &sz);
+  
+  double d_MemFree = std::stod(valueStrings[1], &sz);
+  
+  double d_MemAvailable = std::stod(valueStrings[2], &sz);
+  
+  double d_Buffer = std::stod(valueStrings[3], &sz);
+  
+  double d_Cache = std::stod(valueStrings[4], &sz);
+  
+
+  double d_MemUsed = d_MemTotal - d_MemFree;
+
+ float memUsedPercentage = d_MemUsed/d_MemTotal;
+
+  return memUsedPercentage; }
 
 // TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+long  LinuxParser::UpTime() { 
+  auto uptime = ReadFile(kProcDirectory + kUptimeFilename);
+  string line  = uptime[0];
+  std::istringstream stream(line);
+  string up;
+  stream >> up ;
+   size_t sz;
+  long val = std::stol(up, &sz);
+
+  return val; }
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() { return 0; }
@@ -86,13 +145,46 @@ long LinuxParser::ActiveJiffies() { return 0; }
 long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<std::string> LinuxParser::CpuUtilization() { 
+  vector<std::string> f = ReadFile(LinuxParser::kProcDirectory + "stat");
+  return f; }
 
 // TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
+int LinuxParser::TotalProcesses() { 
+  int value;
+  
+  string proc = "processes";
+  string temp;
+   vector<std::string> f = ReadFile(LinuxParser::kProcDirectory + "stat");
+   
+   for (string s : f){
+     std::stringstream ss;
+     ss << s;
+    ss >> temp;
+    if(proc == temp){
+      ss >> value;
+      return value;
+    }
+   }
+  return 0; }
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::RunningProcesses() {   int value;
+  
+  string proc = "procs_running";
+  string temp;
+   vector<std::string> f = ReadFile(LinuxParser::kProcDirectory + "stat");
+   
+   for (string s : f){
+     std::stringstream ss;
+     ss << s;
+    ss >> temp;
+    if(proc == temp){
+      ss >> value;
+      return value;
+    }
+   }
+  return 0;  }
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function

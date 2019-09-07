@@ -52,6 +52,10 @@ std::string Ram(int pid);
 std::string Uid(int pid);
 std::string User(int pid);
 long int UpTime(int pid);
+
+
+// assistant method for reading a file
+std::vector<std::string> ReadFile(std::string p);
 };  // namespace LinuxParser
 
 #endif
