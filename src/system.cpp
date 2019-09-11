@@ -22,7 +22,7 @@ Processor& System::Cpu() { return cpu_; }
 
 // TODO: Return a container composed of the system's processes
 vector<Process>& System::Processes() { 
-
+    processes_.clear();
     auto pids = LinuxParser::Pids();
 
     for(int i : pids){
@@ -67,9 +67,9 @@ vector<Process>& System::Processes() {
     
     auto stat = LinuxParser::ReadFile(pFolder + LinuxParser::kStatFilename);
     float processor_usage;
-    int processTime ;
+    float processTime ;
 
-
+    float process_seconds;
     if(stat.size()>0){
             string line = stat[0];
             string utime, stime, cutime,cstime,starttime;
@@ -89,7 +89,7 @@ vector<Process>& System::Processes() {
             double totalTicks = i_utime + i_stime + i_cutime + i_cstime;
             float hz = sysconf(_SC_CLK_TCK);
 
-            processTime = i_starttime/hz;
+            //processTime = i_starttime/hz;
 
             float uptime;
             auto uptimecpu = LinuxParser::ReadFile(LinuxParser::kProcDirectory +LinuxParser::kUptimeFilename);
@@ -99,16 +99,17 @@ vector<Process>& System::Processes() {
                 uptime = std::stoi(s);
             }
 
-            float sys_uptime = uptime - processTime;
+            process_seconds = uptime - (i_starttime/hz);
 
-            processor_usage = ((totalTicks/hz) / sys_uptime) ;
-            //* 100.0;
+
+            processor_usage = ((totalTicks/hz) / process_seconds) ;
+            //* 100.0; the multiplication by 100 happens in the ncurse_display fiile
 
     }
     auto cmd = LinuxParser::ReadFile(pFolder + LinuxParser::kCmdlineFilename);
     if( cmd.size() > 0 && !cmd[0].empty()){
 
-    Process p(i,cmd[0],processor_usage,usr,ram, processTime) ;
+    Process p(i,cmd[0],processor_usage,usr,ram, process_seconds) ;
     processes_.push_back(p);
     }
     }
