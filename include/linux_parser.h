@@ -5,6 +5,9 @@
 #include <regex>
 #include <string>
 
+using std::string;
+//using namespace std;
+
 namespace LinuxParser {
 // Paths
 const std::string kProcDirectory{"/proc/"};
@@ -54,8 +57,23 @@ std::string User(int pid);
 long int UpTime(int pid);
 
 
+
+//******* My assistance methods for reading and manipulating strings********
+
 // assistant method for reading a file
 std::vector<std::string> ReadFile(std::string p);
 };  // namespace LinuxParser
+
+
+
+//break strings into tokens
+std::vector<std::string> tokenizeString(string s);
+
+//extract token from string by the index
+std::string extractTokenFromString(string s, int idx);
+
+
+
+
 
 #endif

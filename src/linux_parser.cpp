@@ -20,7 +20,7 @@ vector<std::string> LinuxParser::ReadFile(std::string p){
 
   if (filestream.is_open()) {
     while (std::getline(filestream, line)){
-      //std::getline(filestream, line);
+      
       std::istringstream linestream(line);
       v.push_back(line);
     }
@@ -29,6 +29,23 @@ vector<std::string> LinuxParser::ReadFile(std::string p){
   return v;
 }
 
+
+vector<string> tokenizeString(string s){
+    string word;
+    vector<string> tokens;
+    std::stringstream ss(s);
+
+    while(ss >> word){
+        tokens.push_back(word);
+    }
+
+    return tokens;
+}
+
+
+string extractTokenFromString(string s, int idx){
+    return tokenizeString(s)[idx];
+}
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::OperatingSystem() {

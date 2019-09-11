@@ -1,5 +1,7 @@
 #include <string>
 #include <sstream>
+#include <cmath>
+#include <iomanip>
 
 #include "format.h"
 
@@ -12,21 +14,28 @@ using std::string;
 // OUTPUT: HH:MM:SS
 // REMOVE: [[maybe_unused]] once you define the function
 string Format::ElapsedTime(long seconds) { 
+       
+     int h = 0;
+    int m = 0;
+     
+    myModulo(seconds, 3600, h);
     
-    double minutes = seconds / 60;
-    string t;
-    if (minutes > 1){
-        stringstream st;
-        st << minutes;
-        
-        st >> t;
-        t = t + "  Minutes";
-    }else{
-         stringstream st;
-        st << seconds;
-      
-        st >> t;
+    myModulo(seconds, 60, m);
+    stringstream ss ;
+    
+    ss << h << ":" << std::setfill('0') <<std::setw(2) << m << ":" <<  std::setfill('0') <<std::setw(2) << seconds  ;
+ 
+    std::string result;
+    std::getline(ss,result);
+    return result;
+    
+    
     }
 
 
-    return t; }
+    void myModulo(long&  numerator, int  denominator, int& quotient){
+ 
+    quotient = floor(numerator/denominator);
+    numerator = numerator % denominator;
+ 
+}
