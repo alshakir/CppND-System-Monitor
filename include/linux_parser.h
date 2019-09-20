@@ -1,12 +1,13 @@
 #ifndef SYSTEM_PARSER_H
 #define SYSTEM_PARSER_H
 
+#include <filesystem>
 #include <fstream>
 #include <regex>
 #include <string>
 
 using std::string;
-//using namespace std;
+// using namespace std;
 
 namespace LinuxParser {
 // Paths
@@ -25,6 +26,7 @@ const std::string kPasswordPath{"/etc/passwd"};
 float MemoryUtilization();
 long UpTime();
 std::vector<int> Pids();
+std::vector<int> myPids();
 int TotalProcesses();
 int RunningProcesses();
 std::string OperatingSystem();
@@ -51,29 +53,24 @@ long IdleJiffies();
 
 // Processes
 std::string Command(int pid);
-std::string Ram(int pid);
+std::vector<std::string> Ram_and_User(int pid);
 std::string Uid(int pid);
-std::string User(int pid);
+std::string User(string userID);
 long int UpTime(int pid);
 
-
+std::vector<float> PUsage_and_Pseconds(int pid);
 
 //******* My assistance methods for reading and manipulating strings********
 
-// assistant method for reading a file
+// assistant method for reading a file and returning vector of lines(string)
 std::vector<std::string> ReadFile(std::string p);
-};  // namespace LinuxParser
 
-
-
-//break strings into tokens
+// break strings into tokens
 std::vector<std::string> tokenizeString(string s);
 
-//extract token from string by the index
+// extract token from string by the index
 std::string extractTokenFromString(string s, int idx);
 
-
-
-
+};  // namespace LinuxParser
 
 #endif

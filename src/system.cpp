@@ -1,146 +1,82 @@
 #include <unistd.h>
+#include <algorithm>
 #include <cstddef>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <algorithm>
 
+#include "format.h"
+#include "linux_parser.h"
 #include "process.h"
 #include "processor.h"
 #include "system.h"
-#include "linux_parser.h"
-#include "format.h"
 
 using std::set;
 using std::size_t;
 using std::string;
 using std::vector;
 
-// TODO: Return the system's CPU
+// Done: Return the system's CPU
 Processor& System::Cpu() { return cpu_; }
 
-// TODO: Return a container composed of the system's processes
-vector<Process>& System::Processes() { 
-    processes_.clear();
-    auto pids = LinuxParser::Pids();
+// Done: Return a container composed of the system's processes
+vector<Process>& System::Processes() {
+  // notice this method assume that processes are created in sequence
+  // if multiple threads create processes simultaneously then
+  // there will be a problem in user ID and name if threads are racing on it
+  processes_.clear();
 
-    for(int i : pids){
-    string pFolder = LinuxParser::kProcDirectory + std::to_string(i);
+  // I had to use my method myPids() that implement c++17 filesyste
+  // my compiler supports it : (gcc version 8.3.0 (Ubuntu 8.3.0-6ubuntu1))
+  // but I had to add a line to the cmake file
+  // target_link_libraries(monitor stdc++fs)
+  auto pids = LinuxParser::myPids();
 
-    string ram ;
-    string usr ;
-    auto status = LinuxParser::ReadFile(pFolder + LinuxParser::kStatusFilename);
-    if( status.size() > 0 ){
-        for (string s : status){
-            size_t index = s.find("VmSize");
-            if(index != string::npos){
-                string ramString = s.substr(8);
-                int r = std::stoi(ramString);
-                r /= 1000;
-                ram = std::to_string(r);
-            }    
-            
-            index = s.find("Uid");
-            if(index != string::npos){
-                string uid;
-                std::stringstream ss(s);
-                ss>> uid >> uid;
+  for (int i : pids) {
+    //*** find the command
+    auto cmd = LinuxParser::Command(i);
 
-               auto users = LinuxParser::ReadFile(LinuxParser::kPasswordPath);
-               if(users.size() > 0){
-                   for(string s: users){
-                       std::istringstream is(s);
+    //*** find the username and the RAM size
+    std::vector<string> ram_and_user;
+    ram_and_user.clear();
+    ram_and_user = LinuxParser::Ram_and_User(i);
+    string ram = ram_and_user[0];
+    string user = ram_and_user[1];
 
-                       string s1, s2;
-                       std::getline(is,usr, ':');
-                       std::getline(is,s1, ':');
-                       std::getline(is,s2, ':');
-                       if(s2 == uid)
-                       break;
-                       
-                   }
-               }
-            }
-        }
-    }
-    
-    auto stat = LinuxParser::ReadFile(pFolder + LinuxParser::kStatFilename);
-    float processor_usage;
-    float processTime ;
+    //*** find the processor usage and the process uptime(seconds)
+    auto process_usage_and_seconds = LinuxParser::PUsage_and_Pseconds(i);
+    float processor_usage = process_usage_and_seconds[0];
+    float process_seconds = process_usage_and_seconds[1];
+    Process p(i, cmd, processor_usage, user, ram, process_seconds);
 
-    float process_seconds;
-    if(stat.size()>0){
-            string line = stat[0];
-            string utime, stime, cutime,cstime,starttime;
-            utime = extractTokenFromString(line,13);
-            stime = extractTokenFromString(line,14);
-            cutime = extractTokenFromString(line,15);
-            cstime = extractTokenFromString(line,16);
-            starttime = extractTokenFromString(line,21);
-
-
-            int i_utime = std::stoi(utime);
-            int i_stime = std::stoi(stime);
-            int i_cutime = std::stoi(cutime);
-            int i_cstime = std::stoi(cstime);
-            int i_starttime = std::stoi(starttime);
-
-            double totalTicks = i_utime + i_stime + i_cutime + i_cstime;
-            float hz = sysconf(_SC_CLK_TCK);
-
-            //processTime = i_starttime/hz;
-
-            float uptime;
-            auto uptimecpu = LinuxParser::ReadFile(LinuxParser::kProcDirectory +LinuxParser::kUptimeFilename);
-            
-            if(uptimecpu.size()>0){
-                string s = extractTokenFromString(uptimecpu[0],0);
-                uptime = std::stoi(s);
-            }
-
-            process_seconds = uptime - (i_starttime/hz);
-
-
-            processor_usage = ((totalTicks/hz) / process_seconds) ;
-            //* 100.0; the multiplication by 100 happens in the ncurse_display fiile
-
-    }
-    auto cmd = LinuxParser::ReadFile(pFolder + LinuxParser::kCmdlineFilename);
-    if( cmd.size() > 0 && !cmd[0].empty()){
-
-    Process p(i,cmd[0],processor_usage,usr,ram, process_seconds) ;
     processes_.push_back(p);
-    }
-    }
-   
-       
-    sort(processes_.begin(),processes_.end());
-    return processes_; }
+  }
 
-// TODO: Return the system's kernel identifier (string)
-std::string System::Kernel() { 
-    return LinuxParser::Kernel(); }
+  sort(processes_.begin(), processes_.end());
+  return processes_;
+}
 
-// TODO: Return the system's memory utilization
-float System::MemoryUtilization() { 
-    return LinuxParser::MemoryUtilization(); }
+// Done: Return the system's kernel identifier (string)
+std::string System::Kernel() { return LinuxParser::Kernel(); }
 
-// TODO: Return the operating system name
-std::string System::OperatingSystem() { 
-    return LinuxParser::OperatingSystem(); }
+// Done: Return the system's memory utilization
+float System::MemoryUtilization() { return LinuxParser::MemoryUtilization(); }
 
-// TODO: Return the number of processes actively running on the system
-int System::RunningProcesses() { 
-    auto t = LinuxParser::RunningProcesses();
-    return t; }
+// Done: Return the operating system name
+std::string System::OperatingSystem() { return LinuxParser::OperatingSystem(); }
 
-// TODO: Return the total number of processes on the system
-int System::TotalProcesses() { 
-    auto t = LinuxParser::TotalProcesses();
-    return t;  }
+// Done: Return the number of processes actively running on the system
+int System::RunningProcesses() {
+  auto t = LinuxParser::RunningProcesses();
+  return t;
+}
 
-// TODO: Return the number of seconds since the system started running
-long System::UpTime() { 
-    return LinuxParser::UpTime();
-     }
+// Done: Return the total number of processes on the system
+int System::TotalProcesses() {
+  auto t = LinuxParser::TotalProcesses();
+  return t;
+}
+
+// Done: Return the number of seconds since the system started running
+long System::UpTime() { return LinuxParser::UpTime(); }

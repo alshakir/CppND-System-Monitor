@@ -53,8 +53,8 @@ void NCursesDisplay::DisplaySystem(System& system, WINDOW* window) {
 }
 
 void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
-                                      WINDOW* window, int n){
-                                      //string& empty) {
+                                      WINDOW* window, int n) {
+  // string& empty) {
   int row{0};
   int const pid_column{2};
   int const user_column{9};
@@ -70,12 +70,8 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
   mvwprintw(window, row, time_column, "TIME+");
   mvwprintw(window, row, command_column, "COMMAND");
   wattroff(window, COLOR_PAIR(2));
-  //string empty = "---------------------------------------------------------------------------------------------------";
- // wclear(window);
+
   for (int i = 0; i < n; ++i) {
-    //mvwprintw(window, ++row, pid_column, empty.c_str());
-    //wclrtoeol(window);
-    
     mvwprintw(window, ++row, pid_column, to_string(processes[i].Pid()).c_str());
     mvwprintw(window, row, user_column, processes[i].User().c_str());
     float cpu = processes[i].CpuUtilization() * 100;
@@ -96,9 +92,6 @@ void NCursesDisplay::Display(System& system, int n) {
 
   int x_max{getmaxx(stdscr)};
 
-  //std::string emtpyString(x_max-4, ' ');
-  
-
   WINDOW* system_window = newwin(9, x_max - 1, 0, 0);
   WINDOW* process_window =
       newwin(3 + n, x_max - 1, system_window->_maxy + 1, 0);
@@ -106,13 +99,13 @@ void NCursesDisplay::Display(System& system, int n) {
   while (1) {
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
-    wclear(process_window);//added to prevent remaining letters from previous window
+    wclear(process_window);  // added to prevent remaining letters from previous
+                             // window
     box(system_window, 0, 0);
     box(process_window, 0, 0);
     DisplaySystem(system, system_window);
     DisplayProcesses(system.Processes(), process_window, n);
-    //emtpyString);
-  
+
     wrefresh(system_window);
     wrefresh(process_window);
     refresh();

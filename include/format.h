@@ -7,7 +7,5 @@ namespace Format {
 std::string ElapsedTime(long times);  // TODO: See src/format.cpp
 };                                    // namespace Format
 
-
-
-    void myModulo(long&  numerator, int  denominator, int& quotient);
+void myModulo(long& numerator, int denominator, int& quotient);
 #endif

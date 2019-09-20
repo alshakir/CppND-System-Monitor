@@ -1,71 +1,74 @@
 #include "processor.h"
-#include "linux_parser.h"
 #include <iostream>
+#include "linux_parser.h"
 using namespace LinuxParser;
 using namespace std;
-using std::stof;
 using std::stod;
-
+using std::stof;
 
 // TODO: Return the aggregate CPU utilization
-float Processor::Utilization() { 
-   vector<string> f = CpuUtilization();
-   std::stringstream s (f[0]);
-    
-    string cpu, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+float Processor::Utilization() {
+  vector<string> f = LinuxParser::CpuUtilization();
+  std::stringstream s(f[0]);
 
-    s >> cpu >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal >> guest >> guest_nice;
-   /*
-   I used the folliwng link 
-   
-   https://github.com/Leo-G/DevopsWiki/wiki/How-Linux-CPU-Usage-Time-and-Percentage-is-calculated
+  string cpu, user, nice, system, idle, iowait, irq, softirq, steal, guest,
+      guest_nice;
 
-    Formula
+  s >> cpu >> user >> nice >> system >> idle >> iowait >> irq >> softirq >>
+      steal >> guest >> guest_nice;
+  /*
+  I used the folliwng link
 
-    To calculate Linux CPU usage time subtract the idle CPU time from the total CPU time as follows:
+  https://github.com/Leo-G/DevopsWiki/wiki/How-Linux-CPU-Usage-Time-and-Percentage-is-calculated
 
-    Total CPU time since boot = user+nice+system+idle+iowait+irq+softirq+steal
+   Formula
 
-    Total CPU Idle time since boot = idle + iowait
+   To calculate Linux CPU usage time subtract the idle CPU time from the total
+  CPU time as follows:
 
-    Total CPU usage time since boot = Total CPU time since boot - Total CPU Idle time since boot
+   Total CPU time since boot = user+nice+system+idle+iowait+irq+softirq+steal
 
-    Total CPU percentage = Total CPU usage time since boot/Total CPU time since boot X 100
+   Total CPU Idle time since boot = idle + iowait
 
-    For real time CPU usage, you will need to calculate the time between two intervals.
+   Total CPU usage time since boot = Total CPU time since boot - Total CPU Idle
+  time since boot
 
-    also the following link helped for the real time calculations
-    https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
-   */
-    size_t sz;
-    double d_nice = std::stod(nice,&sz);
+   Total CPU percentage = Total CPU usage time since boot/Total CPU time since
+  boot X 100
 
-    double d_user = std::stod(user,&sz);
-    double d_system = std::stod(system,&sz);
-    double d_idle = std::stod(idle,&sz);
-    double d_iowait = std::stod(iowait,&sz);
-    double d_irq = std::stod(irq,&sz); 
-    double d_softirq = std::stod(softirq,&sz);
-    double d_steal = std::stod(steal,&sz);
-    // double d_guest = std::stod(guest,&sz); 
-    // double d_guest_nice = std::stod(guest_nice,&sz);
+   For real time CPU usage, you will need to calculate the time between two
+  intervals.
 
+   also the following link helped for the real time calculations
+   https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
+  */
+  size_t sz;
+  double d_nice = std::stod(nice, &sz);
 
-    double TotalCPUTime = d_user + d_nice + d_system + d_idle + d_iowait + d_irq + d_softirq + d_steal;
-    double TotalIdleTime = d_idle + d_iowait;
+  double d_user = std::stod(user, &sz);
+  double d_system = std::stod(system, &sz);
+  double d_idle = std::stod(idle, &sz);
+  double d_iowait = std::stod(iowait, &sz);
+  double d_irq = std::stod(irq, &sz);
+  double d_softirq = std::stod(softirq, &sz);
+  double d_steal = std::stod(steal, &sz);
+  // double d_guest = std::stod(guest,&sz);
+  // double d_guest_nice = std::stod(guest_nice,&sz);
 
+  double TotalCPUTime = d_user + d_nice + d_system + d_idle + d_iowait + d_irq +
+                        d_softirq + d_steal;
+  double TotalIdleTime = d_idle + d_iowait;
 
-    double currentTotalCPUTime = TotalCPUTime - previousTotal;
-    double currentTotalIdleTime = TotalIdleTime - previousIdle;
+  double currentTotalCPUTime = TotalCPUTime - previousTotal;
+  double currentTotalIdleTime = TotalIdleTime - previousIdle;
 
-    //reset values for next cycle
-    previousTotal = TotalCPUTime;
-    previousIdle = TotalIdleTime;
-    //ouble TotalCPUUsageSinceBoot = TotalCPUTime - TotalIdleTime;
+  // reset values for next cycle
+  previousTotal = TotalCPUTime;
+  previousIdle = TotalIdleTime;
+  // ouble TotalCPUUsageSinceBoot = TotalCPUTime - TotalIdleTime;
 
-    double totalCPUPercentageSinceBoot = (currentTotalCPUTime - currentTotalIdleTime )/currentTotalCPUTime ;
-    
-    
-    
-    
-    return totalCPUPercentageSinceBoot; }
+  double totalCPUPercentageSinceBoot =
+      (currentTotalCPUTime - currentTotalIdleTime) / currentTotalCPUTime;
+
+  return totalCPUPercentageSinceBoot;
+}
